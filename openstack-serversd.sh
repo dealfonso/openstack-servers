@@ -4,6 +4,24 @@ LOGFILE=/var/log/openstack-servers.log
 SERVERS_FILE_PATTERN="/var/log/openstack-servers/openstack-servers"
 CONFIG_FILE="/etc/openstack-servers.conf"
 MINUTES_BETWEEN_CHECKS=10
+ONE_SHOT=false
+
+function usage {
+	cat <<EOF
+Usage: $0 [options]
+
+Options:
+	-h, --help			show this help
+	-v, --version		show the version
+	-l, --log-file		sets the file where to log
+	-f, --os-credentials-file
+						OpenStack credentials file to be read
+	-c, --config		configuration file
+	-V, --verbose		verbose mode
+	-i, --interval		interval between checks (in minutes)
+	-S, --one-shot		one shot mode (run once and exit; implies verbose mode)
+EOF
+}
 
 function p_info {
         local TS=$(date +%F_%T | tr ':' '.')
@@ -84,6 +102,7 @@ while [ $# -gt 0 ]; do
 		-V|--verbose)	DEBUG=1;;
 		-i|--internal)	shift
 				MINUTES_BETWEEN_CHECKS="$1";;
+		-S|--one-shot)	ONE_SHOT=true;;
 		*)		p_error "invalid parameter $1"
 				exit 1;;
 	esac
@@ -116,9 +135,11 @@ $SERVERS"
 	local NEED_WRITE=
 	if [ ! -e "$CONTROL_FILE" ]; then
         	NEED_WRITE=true
+		p_debug "first control file"
 	        echo "$SERVERS" > "$DIFFERENT_FILE"
 	else
         	if ! diff -q "$CONTROL_FILE" - <<<"$SERVERS" >/dev/null 2>/dev/null; then
+			p_debug "differences detected"
                 	cp "$CONTROL_FILE" "$DIFFERENT_FILE"
 	                NEED_WRITE=true
         	fi
@@ -126,6 +147,12 @@ $SERVERS"
 
 	[ "$NEED_WRITE" == "true" ] && echo "$SERVERS" > "$CONTROL_FILE"
 }
+
+if [ "$ONE_SHOT" == "true" ]; then
+	DEBUG=true
+	execute
+	exit $?
+fi
 
 SLEEP_TIME=$((MINUTES_BETWEEN_CHECKS*60))
 
