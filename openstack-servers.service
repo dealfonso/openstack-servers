@@ -1,0 +1,12 @@
+[Unit]
+Description=Snapshot de la lista de servidores activos en OpenStack
+After=nova-api.service
+
+[Service]
+Type=simple
+PIDFile=/var/run/openstack-servers.pid
+ExecStart=/usr/sbin/openstack-serversd.sh
+ExecStop=/bin/kill $MAINPID
+
+[Install]
+WantedBy=multi-user.target
