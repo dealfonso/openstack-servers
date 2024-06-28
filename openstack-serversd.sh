@@ -5,6 +5,7 @@ SERVERS_FILE_PATTERN="/var/log/openstack-servers/openstack-servers"
 CONFIG_FILE="/etc/openstack-servers.conf"
 MINUTES_BETWEEN_CHECKS=10
 ONE_SHOT=false
+VERSION=1.0.0
 
 function usage {
 	cat <<EOF
